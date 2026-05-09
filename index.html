@@ -407,8 +407,28 @@
     .work-card.more-card {
       grid-column: span 8;
       min-height: 360px;
-      background: rgba(245, 245, 247, .86);
       justify-content: stretch;
+      border-radius: 32px;
+      border: 1px solid rgba(15, 23, 42, .055);
+      background:
+        radial-gradient(circle at 86% 18%, rgba(37, 99, 235, .075), transparent 30%),
+        radial-gradient(circle at 18% 84%, rgba(14, 165, 168, .06), transparent 34%),
+        linear-gradient(180deg, rgba(255,255,255,.84), rgba(247,248,251,.88));
+      box-shadow:
+        0 22px 70px rgba(15, 23, 42, .055),
+        inset 0 1px 0 rgba(255, 255, 255, .88);
+    }
+
+    .work-card.more-card::before {
+      content: "";
+      position: absolute;
+      inset: 1px;
+      border-radius: 31px;
+      pointer-events: none;
+      background:
+        linear-gradient(135deg, rgba(255,255,255,.72), transparent 36%),
+        linear-gradient(315deg, rgba(37,99,235,.035), transparent 42%);
+      opacity: .9;
     }
 
     .more-card::after {
@@ -416,9 +436,11 @@
     }
 
     .more-inner {
+      position: relative;
+      z-index: 1;
       width: 100%;
       min-height: 360px;
-      padding: 30px;
+      padding: 36px 38px 34px;
       display: grid;
       grid-template-rows: auto 1fr auto;
       align-items: center;
@@ -539,6 +561,10 @@
       position: absolute;
       inset: 0;
       z-index: -1;
+      background: none;
+    }
+
+    .work-card.more-card::after {
       background: none;
     }
 
