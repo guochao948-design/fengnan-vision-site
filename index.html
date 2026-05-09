@@ -39,11 +39,7 @@
       min-height: 100vh;
       font-family: var(--font-body);
       color: var(--text);
-      background:
-        radial-gradient(circle at 18% 10%, rgba(37, 99, 235, .055), transparent 28%),
-        radial-gradient(circle at 82% 8%, rgba(124, 58, 237, .05), transparent 26%),
-        radial-gradient(circle at 54% 44%, rgba(14, 165, 168, .035), transparent 32%),
-        var(--page);
+      background: var(--page);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -162,24 +158,6 @@
       overflow: hidden;
     }
 
-    .hero::before {
-      content: "";
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      width: min(760px, 78vw);
-      height: min(760px, 78vw);
-      transform: translate(-50%, -54%);
-      border-radius: 999px;
-      background:
-        radial-gradient(circle at 32% 28%, rgba(37, 99, 235, .13), transparent 30%),
-        radial-gradient(circle at 68% 34%, rgba(124, 58, 237, .10), transparent 32%),
-        radial-gradient(circle at 52% 72%, rgba(14, 165, 168, .08), transparent 34%);
-      filter: blur(18px);
-      opacity: .72;
-      pointer-events: none;
-      z-index: -1;
-    }
 
     .eyebrow {
       margin-bottom: 26px;
@@ -261,7 +239,7 @@
       border: 1px solid rgba(15, 23, 42, .065);
       border-left: none;
       border-right: none;
-      background: linear-gradient(180deg, rgba(255, 255, 255, .58), rgba(255, 255, 255, .38));
+      background: rgba(255, 255, 255, .72);
       backdrop-filter: blur(18px) saturate(160%);
       -webkit-backdrop-filter: blur(18px) saturate(160%);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .78);
@@ -492,26 +470,6 @@
       letter-spacing: -.016em;
     }
 
-    .more-title {
-      margin: 0 0 14px;
-      font-family: var(--font-display);
-      color: #1d1d1f;
-      font-size: clamp(30px, 3.1vw, 42px);
-      line-height: 1.08;
-      font-weight: 650;
-      letter-spacing: -.046em;
-      text-wrap: balance;
-    }
-
-    .more-desc {
-      margin: 0;
-      color: var(--sub);
-      font-size: 15px;
-      line-height: 1.62;
-      font-weight: 400;
-      letter-spacing: -.016em;
-    }
-
     .work-card:hover {
       transform: translateY(-4px);
       border-color: rgba(37, 99, 235, .18);
@@ -539,7 +497,7 @@
       position: absolute;
       inset: 0;
       z-index: -1;
-      background: linear-gradient(180deg, rgba(245,245,247,.10) 0%, rgba(245,245,247,.24) 42%, rgba(245,245,247,.96) 100%);
+      background: none;
     }
 
     .work-content {
@@ -597,17 +555,6 @@
       position: relative;
     }
 
-    .about-services::before {
-      content: "";
-      position: absolute;
-      right: -160px;
-      top: 110px;
-      width: 420px;
-      height: 420px;
-      border-radius: 999px;
-      background: radial-gradient(circle, rgba(14, 165, 168, .07), transparent 66%);
-      pointer-events: none;
-    }
 
     .profile-block {
       display: grid;
@@ -771,6 +718,7 @@
       gap: 28px;
       flex-wrap: wrap;
     }
+
 
     .resource-directory {
       width: min(var(--container), calc(100vw - 48px));
@@ -1195,25 +1143,25 @@
     <div class="resource-grid">
       <div class="resource-group">
         <h3>视觉工作流</h3>
-        <a href="#">C4D / AE 问题汇总</a>
-        <a href="#">材质转换插件</a>
-        <a href="#">3D / CGI 样片</a>
+        <a href="https://my.feishu.cn/wiki/UH2WwjshxiLOV8kLQKgcdXRinP5?fromScene=spaceOverview" target="_blank" rel="noopener noreferrer">C4D / AE 问题汇总</a>
+        <a href="https://mp.weixin.qq.com/s/1EeR_ZV5Y-Gh8LgyAqhsQQ?payreadticket=HD4av8nPQ86miyzlfoMX3rZAADv-aa3GN4rSjr0ACjf-Z4oH7yZw-UJg7ulgWUSGrQVvWas" target="_blank" rel="noopener noreferrer">材质转换插件</a>
+        <a href="https://mp.weixin.qq.com/s/RTZGAREqEZqUUTc8DDnWwA" target="_blank" rel="noopener noreferrer">3D / CGI 样片</a>
       </div>
       <div class="resource-group">
         <h3>AIGC 创作</h3>
         <a href="#">GPT 批量出图</a>
-        <a href="#">AI 歌曲生成</a>
-        <a href="#">AI 音乐与音效</a>
+        <a href="https://mp.weixin.qq.com/s/NuaR0pD2kojALPw11VsyKw" target="_blank" rel="noopener noreferrer">AI 生成歌曲推荐</a>
+        <a href="https://mp.weixin.qq.com/s/eeD4Q7vudIXf82wN_h4anw" target="_blank" rel="noopener noreferrer">AI 音乐与音效</a>
       </div>
       <div class="resource-group">
         <h3>效率工具</h3>
-        <a href="#">日常小工具</a>
-        <a href="#">Claude 桌面端安装</a>
-        <a href="#">Codex 工作流</a>
+        <a href="https://mp.weixin.qq.com/s/inLOlYxKjpFsr1tgp5IrBA" target="_blank" rel="noopener noreferrer">日常小工具</a>
+        <a href="/tools/resume/">简历制作</a>
+        <a href="https://mp.weixin.qq.com/s/VUvYJSKHDEwxaAeeWxSxfw" target="_blank" rel="noopener noreferrer">Codex 工作流</a>
       </div>
       <div class="resource-group">
         <h3>风男视觉</h3>
-        <a href="#works">精选作品</a>
+        <a href="https://www.zcool.com.cn/u/17233702" target="_blank" rel="noopener noreferrer">精选作品</a>
         <a href="https://zcool.com.cn/u/17233702" target="_blank" rel="noopener noreferrer">站酷主页</a>
         <a href="mailto:1115914765@qq.com">联系合作</a>
       </div>
