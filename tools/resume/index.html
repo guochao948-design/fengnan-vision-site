@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>风男视觉 · 在线简历生成器 · 黑边修复版</title>
+  <meta name="description" content="在线制作简历：上传头像，填写信息，选择风格预设，实时生成 A4 简历，一键导出 PNG / PDF。所有内容仅在浏览器本地生成，不上传服务器。" />
+  <meta name="theme-color" content="#f3f5f8" />
+  <meta property="og:title" content="风男视觉 · 在线简历生成器" />
+  <meta property="og:description" content="上传头像，填写信息，实时生成 A4 简历，一键导出 PNG / PDF。" />
+  <meta property="og:type" content="website" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #f3f5f8;
+      --panel: rgba(255, 255, 255, 0.86);
+      --text: #121417;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #2563eb;
+      --radius: 18px;
+      --shadow: 0 24px 70px rgba(15, 23, 42, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei UI", "Noto Sans SC", Arial, sans-serif;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(37, 99, 235, 0.12), rgba(37, 99, 235, 0) 36%),
+        radial-gradient(circle at 100% 20%, rgba(20, 184, 166, 0.12), rgba(20, 184, 166, 0) 34%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .app { min-height: 100vh; padding: 28px; }
+
+    .topbar {
+      max-width: 1480px;
+      margin: 0 auto 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand h1 { margin: 0; font-size: 26px; letter-spacing: -0.04em; }
+    .brand p { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+    .privacy {
+      font-size: 13px;
+      color: #475569;
+      background: rgba(255, 255, 255, 0.74);
+      border: 1px solid rgba(226, 232, 240, 0.88);
+      border-radius: 999px;
+      padding: 10px 14px;
+      backdrop-filter: blur(16px);
+    }
+
+    .layout {
+      max-width: 1480px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 440px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid rgba(226, 232, 240, 0.88);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .form-panel {
+      padding: 18px;
+      position: sticky;
+      top: 20px;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+    }
+
+    .preview-panel {
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .section-title {
+      margin: 20px 0 12px;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .section-title:first-child { margin-top: 0; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    label { display: block; margin: 0 0 6px; color: #374151; font-size: 12px; font-weight: 700; }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 11px 12px;
+      font-size: 14px;
+      color: var(--text);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: rgba(37, 99, 235, 0.65);
+      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+
+    textarea { resize: vertical; min-height: 86px; line-height: 1.65; }
+    .field { margin-bottom: 10px; }
+
+    .style-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .style-card {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.76);
+      border-radius: 16px;
+      padding: 12px;
+      cursor: pointer;
+      transition: border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .style-card:hover { transform: translateY(-1px); }
+    .style-card.active { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(37, 99, 235, .1); }
+    .style-card strong { display: block; font-size: 13px; margin-bottom: 6px; }
+    .style-card span { color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    .avatar-row { display: grid; grid-template-columns: 92px 1fr; gap: 12px; align-items: center; }
+    .avatar-crop {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #e2e8f0, #f8fafc);
+      user-select: none;
+      touch-action: none;
+      cursor: grab;
+    }
+    .avatar-crop.dragging { cursor: grabbing; }
+    .avatar-crop img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: translate(calc(-50% + var(--avatar-x, 0%)), calc(-50% + var(--avatar-y, 0%))) scale(var(--avatar-scale, 1));
+      transform-origin: center;
+      pointer-events: none;
+      will-change: transform;
+    }
+    .avatar-mini {
+      width: 86px;
+      height: 86px;
+      border-radius: 50%;
+      border: 1px solid var(--line);
+    }
+    .avatar-tip {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+    .avatar-tools {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+    }
+    .avatar-tools label { margin: 0; }
+    input[type="range"] { padding: 0; accent-color: var(--accent); }
+
+    .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 15px;
+      font-size: 13px;
+      font-weight: 800;
+      font-family: inherit;
+      cursor: pointer;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
+    }
+    button:active { transform: scale(0.98); }
+    .btn-primary { color: #fff; background: #111827; box-shadow: 0 12px 28px rgba(17, 24, 39, 0.18); }
+    .btn-accent { color: #fff; background: var(--accent); box-shadow: 0 12px 28px rgba(37, 99, 235, 0.22); }
+    .btn-soft { color: #111827; background: #eef2f7; }
+    .btn-danger { color: #991b1b; background: #fee2e2; }
+
+    .item-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: rgba(255, 255, 255, 0.72);
+    }
+    .item-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .item-head strong { font-size: 13px; }
+    .remove-btn { padding: 7px 10px; font-size: 12px; color: #991b1b; background: #fee2e2; }
+
+    .preview-toolbar {
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .preview-toolbar .hint { color: var(--muted); font-size: 13px; }
+
+    .paper-wrap {
+      width: 100%;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      padding: 10px 0 24px;
+    }
+
+    .resume-page {
+      --r-bg: #ffffff;
+      --r-text: #111827;
+      --r-muted: #4b5563;
+      --r-line: #e5e7eb;
+      --r-accent: #2563eb;
+      --r-soft: #f8fafc;
+      --r-card: #f8fafc;
+      --r-radius: 20px;
+      --avatar-radius: 28px;
+      width: 794px;
+      min-height: 1123px;
+      background: var(--r-bg);
+      box-shadow: 0 28px 80px rgba(15, 23, 42, 0.18);
+      transform-origin: top center;
+      color: var(--r-text);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .resume-inner { padding: 46px 54px 40px; position: relative; z-index: 2; }
+
+    .resume-header {
+      display: grid;
+      grid-template-columns: 104px 1fr;
+      gap: 22px;
+      align-items: center;
+      padding-bottom: 22px;
+      border-bottom: 2px solid var(--r-text);
+    }
+
+    .resume-avatar {
+      width: 104px;
+      height: 104px;
+      border-radius: var(--avatar-radius);
+      background: var(--r-soft);
+      border: 1px solid var(--r-line);
+    }
+
+    .resume-name { margin: 0; font-size: 40px; line-height: 1.05; letter-spacing: -0.06em; font-weight: 900; }
+    .resume-target { margin: 8px 0 12px; font-size: 18px; font-weight: 800; color: var(--r-accent); }
+    .resume-contact { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--r-muted); font-size: 12px; line-height: 1.5; }
+
+    .resume-body { display: block; padding-top: 22px; }
+    .resume-section { margin-bottom: 18px; break-inside: avoid; }
+    .resume-section h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 900;
+      color: var(--r-text);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .resume-section h2::after { content: ""; height: 1px; flex: 1; background: var(--r-line); }
+    .resume-section p { margin: 0; color: var(--r-muted); font-size: 13px; line-height: 1.72; white-space: pre-line; }
+
+    .entry { margin-bottom: 12px; padding-bottom: 10px; border-bottom: 1px solid var(--r-line); }
+    .entry:last-child { border-bottom: 0; padding-bottom: 0; margin-bottom: 0; }
+    .entry-title { display: flex; justify-content: space-between; gap: 14px; margin-bottom: 5px; }
+    .entry-title strong { font-size: 14px; font-weight: 900; color: var(--r-text); }
+    .entry-time { color: var(--r-muted); font-size: 12px; white-space: nowrap; }
+    .entry-sub { margin-bottom: 6px; color: var(--r-accent); font-size: 12px; font-weight: 800; }
+
+    .skill-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .skill-tag {
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--r-soft);
+      border: 1px solid var(--r-line);
+      color: var(--r-muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .side-card {
+      background: var(--r-card);
+      border: 1px solid var(--r-line);
+      border-radius: var(--r-radius);
+      padding: 14px;
+      margin-bottom: 14px;
+    }
+    .side-card .resume-section:last-child { margin-bottom: 0; }
+
+    .footer-mark { display: none; }
+
+    /* 风格 1：极简商务 */
+    .resume-page.preset-minimal {
+      --r-bg: #ffffff;
+      --r-text: #111827;
+      --r-muted: #374151;
+      --r-line: #e5e7eb;
+      --r-accent: #2563eb;
+      --r-soft: #f8fafc;
+      --r-card: #f8fafc;
+      --r-radius: 20px;
+      --avatar-radius: 28px;
+    }
+
+    /* 风格 2：Fluent 蓝 */
+    .resume-page.preset-fluent {
+      --r-bg:
+        radial-gradient(ellipse 1500px 980px at 112% -34%, rgba(37, 99, 235, .15) 0%, rgba(37, 99, 235, .085) 36%, rgba(37, 99, 235, .026) 68%, rgba(37, 99, 235, 0) 100%),
+        linear-gradient(180deg, #f8fbff 0%, #ffffff 42%);
+      --r-text: #0f172a;
+      --r-muted: #475569;
+      --r-line: #dbeafe;
+      --r-accent: #2563eb;
+      --r-soft: #eff6ff;
+      --r-card: rgba(239, 246, 255, .8);
+      --r-radius: 24px;
+      --avatar-radius: 32px;
+    }
+    .resume-page.preset-fluent::before { display: none; }
+    .resume-page.preset-fluent .resume-header { border-bottom-color: #bfdbfe; }
+    .resume-page.preset-fluent .resume-avatar { box-shadow: 0 18px 50px rgba(37,99,235,.14); }
+
+    /* 风格 3：黑白高级 */
+    .resume-page.preset-mono {
+      --r-bg: #fbfbfa;
+      --r-text: #09090b;
+      --r-muted: #3f3f46;
+      --r-line: #d4d4d8;
+      --r-accent: #09090b;
+      --r-soft: #ffffff;
+      --r-card: #ffffff;
+      --r-radius: 0px;
+      --avatar-radius: 0px;
+    }
+    .resume-page.preset-mono .resume-inner { padding: 46px 58px 40px; }
+    .resume-page.preset-mono .resume-header { border-bottom: 4px solid #09090b; }
+    .resume-page.preset-mono .resume-section h2 { letter-spacing: .18em; }
+    .resume-page.preset-mono .side-card { border-left: 4px solid #09090b; }
+    .resume-page.preset-mono .skill-tag { border-radius: 0; }
+
+    /* 风格 4：设计师卡片 */
+    .resume-page.preset-creative {
+      --r-bg:
+        radial-gradient(ellipse 1650px 1120px at 118% -34%, rgba(148, 163, 184, .18) 0%, rgba(148, 163, 184, .095) 38%, rgba(148, 163, 184, .032) 70%, rgba(148, 163, 184, 0) 100%),
+        radial-gradient(ellipse 1300px 920px at -30% -22%, rgba(255, 255, 255, .065) 0%, rgba(255, 255, 255, .03) 44%, rgba(255, 255, 255, .012) 72%, rgba(255, 255, 255, 0) 100%),
+        linear-gradient(180deg, #151820 0%, #111419 58%, #0f1117 100%);
+      --r-text: #f8fafc;
+      --r-muted: #cbd5e1;
+      --r-line: rgba(255,255,255,.13);
+      --r-accent: #dbe4ff;
+      --r-soft: rgba(255,255,255,.075);
+      --r-card: rgba(255,255,255,.065);
+      --r-radius: 24px;
+      --avatar-radius: 32px;
+    }
+    .resume-page.preset-creative::before { display: none; }
+    .resume-page.preset-creative .resume-header { border-bottom-color: rgba(255,255,255,.16); }
+    .resume-page.preset-creative .resume-avatar {
+      border: 1px solid rgba(255,255,255,.26);
+      box-shadow: 0 22px 60px rgba(0,0,0,.24), 0 0 0 8px rgba(255,255,255,.035);
+      background: rgba(255,255,255,.08);
+    }
+    .resume-page.preset-creative .skill-tag {
+      color: #e5e7eb;
+      background: rgba(255,255,255,.075);
+      border-color: rgba(255,255,255,.13);
+    }
+
+    /* 风格 5：银白高级 */
+    .resume-page.preset-warm {
+      --r-bg: linear-gradient(180deg, #ffffff 0%, #f7f8fb 100%);
+      --r-text: #111827;
+      --r-muted: #4b5563;
+      --r-line: rgba(17, 24, 39, .12);
+      --r-accent: #111827;
+      --r-soft: rgba(248, 250, 252, .92);
+      --r-card: rgba(255, 255, 255, .78);
+      --r-radius: 24px;
+      --avatar-radius: 28px;
+    }
+    .resume-page.preset-warm::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 1500px 1000px at 112% -26%, rgba(148, 163, 184, .13) 0%, rgba(148, 163, 184, .065) 40%, rgba(148, 163, 184, .02) 72%, rgba(148, 163, 184, 0) 100%),
+        linear-gradient(135deg, rgba(15, 23, 42, .026) 0%, rgba(15, 23, 42, 0) 74%);
+      z-index: 1;
+    }
+    .resume-page.preset-warm .resume-header { border-bottom-color: rgba(17, 24, 39, .18); }
+    .resume-page.preset-warm .resume-name { letter-spacing: -.055em; }
+    .resume-page.preset-warm .resume-section h2 { letter-spacing: .16em; }
+    .resume-page.preset-warm .resume-avatar { box-shadow: 0 18px 50px rgba(15, 23, 42, .10); }
+
+    /* 风格 6：极光科技 */
+    .resume-page.preset-aurora {
+      /* 导出稳定版：不用 blur / 伪元素，避免 html2canvas 把光晕栅格化成方块 */
+      --r-bg:
+        radial-gradient(ellipse 980px 660px at 88% -12%, rgba(124, 58, 237, .24) 0%, rgba(124, 58, 237, .18) 18%, rgba(124, 58, 237, .10) 42%, rgba(124, 58, 237, .045) 64%, rgba(124, 58, 237, .014) 82%, rgba(124, 58, 237, 0) 100%),
+        radial-gradient(ellipse 860px 580px at 106% 8%, rgba(94, 234, 212, .23) 0%, rgba(94, 234, 212, .16) 22%, rgba(94, 234, 212, .08) 46%, rgba(94, 234, 212, .032) 68%, rgba(94, 234, 212, .010) 84%, rgba(94, 234, 212, 0) 100%),
+        radial-gradient(ellipse 760px 540px at 68% 2%, rgba(96, 165, 250, .18) 0%, rgba(96, 165, 250, .12) 24%, rgba(96, 165, 250, .060) 50%, rgba(96, 165, 250, .022) 72%, rgba(96, 165, 250, 0) 100%),
+        linear-gradient(180deg, #f8fbff 0%, #f4f7ff 52%, #ffffff 100%);
+      --r-text: #101827;
+      --r-muted: #475569;
+      --r-line: rgba(99, 102, 241, .18);
+      --r-accent: #7c3aed;
+      --r-soft: rgba(124, 58, 237, .07);
+      --r-card: rgba(255, 255, 255, .72);
+      --r-radius: 24px;
+      --avatar-radius: 30px;
+    }
+    .resume-page.preset-aurora::before { display: none; }
+    .resume-page.preset-aurora .resume-header { border-bottom-color: rgba(124, 58, 237, .24); }
+    .resume-page.preset-aurora .resume-avatar { box-shadow: 0 20px 60px rgba(124, 58, 237, .14); }
+    .resume-page.preset-aurora .skill-tag { color: #4338ca; }
+
+
+    /* 导出稳定修复：给 html2canvas 明确白色底，避免透明渐变在 PNG/PDF 中被合成为黑色 */
+    .resume-page {
+      background-color: #ffffff;
+      isolation: isolate;
+    }
+    .resume-page.exporting {
+      background-color: #ffffff !important;
+    }
+
+    .crop-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(15, 23, 42, .52);
+      backdrop-filter: blur(16px);
+    }
+    .crop-modal.open { display: flex; }
+    .crop-dialog {
+      width: min(560px, 100%);
+      background: rgba(255, 255, 255, .96);
+      border: 1px solid rgba(226, 232, 240, .9);
+      border-radius: 24px;
+      box-shadow: 0 34px 100px rgba(15, 23, 42, .28);
+      padding: 18px;
+    }
+    .crop-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .crop-head strong {
+      display: block;
+      font-size: 18px;
+      letter-spacing: -.03em;
+    }
+    .crop-head span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .crop-stage-wrap {
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+    }
+    .crop-stage {
+      width: 360px;
+      height: 360px;
+      max-width: 74vw;
+      max-height: 74vw;
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--crop-avatar-radius, 28px);
+      background:
+        linear-gradient(45deg, #eef2f7 25%, transparent 25%),
+        linear-gradient(-45deg, #eef2f7 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #eef2f7 75%),
+        linear-gradient(-45deg, transparent 75%, #eef2f7 75%),
+        #ffffff;
+      background-size: 22px 22px;
+      background-position: 0 0, 0 11px, 11px -11px, -11px 0;
+      cursor: grab;
+      touch-action: none;
+      user-select: none;
+      box-shadow: inset 0 0 0 2px rgba(17, 24, 39, .08);
+    }
+    .crop-stage.dragging { cursor: grabbing; }
+    .crop-stage img {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform-origin: center;
+      pointer-events: none;
+      user-select: none;
+      will-change: transform, width, height;
+    }
+    .crop-stage::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 2px solid rgba(37, 99, 235, .38);
+      border-radius: inherit;
+      pointer-events: none;
+    }
+    .crop-tools {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .crop-tool-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .crop-tool-row input[type="range"] {
+      flex: 1;
+      min-width: 180px;
+    }
+
+
+    .export-loading {
+      position: fixed;
+      inset: 0;
+      z-index: 1200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(248, 250, 252, .72);
+      backdrop-filter: blur(16px);
+    }
+
+    body.is-exporting .export-loading { display: flex; }
+
+    .export-card {
+      min-width: 260px;
+      max-width: 86vw;
+      border-radius: 24px;
+      padding: 22px 24px;
+      background: rgba(255, 255, 255, .94);
+      border: 1px solid rgba(226, 232, 240, .92);
+      box-shadow: 0 30px 90px rgba(15, 23, 42, .18);
+      text-align: center;
+    }
+
+    .export-spinner {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 14px;
+      border-radius: 50%;
+      border: 3px solid #e5e7eb;
+      border-top-color: var(--accent);
+      animation: spin .82s linear infinite;
+    }
+
+    .export-card strong {
+      display: block;
+      font-size: 15px;
+      margin-bottom: 6px;
+      letter-spacing: -.02em;
+    }
+
+    .export-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    body.is-exporting button,
+    body.is-exporting input,
+    body.is-exporting textarea,
+    body.is-exporting select {
+      pointer-events: none;
+    }
+
+    .mobile-action-bar button {
+      min-width: 0;
+      white-space: nowrap;
+    }
+
+    .mobile-action-bar {
+      display: none;
+    }
+
+    @media (max-width: 1180px) {
+      .layout { grid-template-columns: 1fr; }
+      .form-panel { position: static; max-height: none; }
+    }
+
+    @media (max-width: 860px) {
+      .app { padding: 14px 14px 108px; }
+      .topbar { align-items: flex-start; flex-direction: column; gap: 10px; margin-bottom: 14px; }
+      .brand h1 { font-size: 22px; }
+      .brand p { font-size: 13px; line-height: 1.55; }
+      .privacy { border-radius: 14px; line-height: 1.55; }
+      .layout { gap: 14px; }
+      .form-panel, .preview-panel { padding: 14px; border-radius: 18px; }
+      .grid-2, .style-grid { grid-template-columns: 1fr; }
+      .avatar-row { grid-template-columns: 82px 1fr; }
+      .avatar-mini { width: 76px; height: 76px; }
+      .preview-toolbar .btn-row { display: none; }
+      .paper-wrap { justify-content: center; padding: 4px 0 18px; overflow: hidden; }
+      .resume-page { transform: scale(var(--mobile-resume-scale, .42)); transform-origin: top center; }
+      .mobile-action-bar {
+        position: fixed;
+        left: max(12px, env(safe-area-inset-left));
+        right: max(12px, env(safe-area-inset-right));
+        bottom: max(12px, env(safe-area-inset-bottom));
+        z-index: 900;
+        display: grid;
+        grid-template-columns: .8fr .9fr 1fr 1fr;
+        gap: 8px;
+        padding: 10px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, .88);
+        border: 1px solid rgba(226, 232, 240, .92);
+        box-shadow: 0 20px 60px rgba(15, 23, 42, .2);
+        backdrop-filter: blur(18px);
+      }
+      .mobile-action-bar button {
+        padding: 12px 8px;
+        font-size: 12px;
+      }
+      .preview-toolbar .hint { line-height: 1.55; }
+      .style-card { padding: 13px; }
+      textarea { min-height: 78px; }
+      .crop-dialog { padding: 14px; border-radius: 20px; }
+      .crop-stage { width: 320px; height: 320px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .topbar, .form-panel, .preview-toolbar, .mobile-action-bar, .crop-modal { display: none !important; }
+      .app { padding: 0; }
+      .layout { display: block; }
+      .preview-panel { box-shadow: none; border: 0; padding: 0; }
+      .paper-wrap { padding: 0; overflow: visible; }
+      .resume-page { box-shadow: none; width: 210mm; min-height: 297mm; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div class="brand">
+        <h1>风男视觉 · 在线简历生成器</h1>
+        <p>上传头像，填写信息，选择风格预设，实时生成 A4 简历，一键导出 PNG / PDF。</p>
+      </div>
+      <div class="privacy">本地生成 · 不上传服务器 · 可直接部署到个人网站</div>
+    </header>
+
+    <section class="layout">
+      <aside class="panel form-panel">
+        <div class="section-title">模板风格</div>
+        <select id="stylePreset" onchange="applyPreset(this.value); saveDraft();">
+          <option value="minimal">极简商务</option>
+          <option value="fluent">Fluent 蓝</option>
+          <option value="mono">黑白高级</option>
+          <option value="creative">设计师卡片</option>
+          <option value="warm">银白高级</option>
+          <option value="aurora">极光科技</option>
+        </select>
+        <div class="style-grid" style="margin-top:10px;">
+          <div class="style-card" data-preset="minimal" onclick="selectPreset('minimal')"><strong>极简商务</strong><span>白底、清晰、正式投递友好</span></div>
+          <div class="style-card" data-preset="fluent" onclick="selectPreset('fluent')"><strong>Fluent 蓝</strong><span>轻玻璃、蓝色层级、现代感</span></div>
+          <div class="style-card" data-preset="mono" onclick="selectPreset('mono')"><strong>黑白高级</strong><span>高对比、打印稳、克制专业</span></div>
+          <div class="style-card" data-preset="creative" onclick="selectPreset('creative')"><strong>设计师卡片</strong><span>深色、银灰层次、作品集感</span></div>
+          <div class="style-card" data-preset="warm" onclick="selectPreset('warm')"><strong>银白高级</strong><span>银白、克制、简约高级感</span></div>
+          <div class="style-card" data-preset="aurora" onclick="selectPreset('aurora')"><strong>极光科技</strong><span>蓝紫渐变、现代科技感</span></div>
+        </div>
+
+        <div class="section-title">头像</div>
+        <div class="avatar-row">
+          <div id="avatarPreview" class="avatar-mini avatar-crop" title="按住拖拽调整头像位置">
+            <img id="avatarPreviewImg" alt="头像预览" />
+          </div>
+          <div>
+            <label for="avatarInput">上传头像</label>
+            <input id="avatarInput" type="file" accept="image/*" />
+            <div class="avatar-tip">上传后先进入裁剪预览，可拖拽/缩放后再应用到简历。应用后仍可微调。</div>
+          </div>
+        </div>
+        <div class="avatar-tools">
+          <div>
+            <label for="avatarScale">头像缩放</label>
+            <input id="avatarScale" type="range" min="1" max="2.4" step="0.01" value="1" />
+          </div>
+          <button class="btn-soft" onclick="resetAvatarCrop()">重置</button>
+        </div>
+        <div class="avatar-tools">
+          <div>
+            <label for="avatarRadius">头像圆角 <span id="avatarRadiusValue">28px</span></label>
+            <input id="avatarRadius" type="range" min="0" max="52" step="1" value="28" />
+          </div>
+          <button class="btn-soft" onclick="setAvatarCircle()">圆形</button>
+        </div>
+
+        <div class="section-title">基础信息</div>
+        <div class="grid-2">
+          <div class="field"><label>姓名</label><input id="name" value="张三" /></div>
+          <div class="field"><label>求职意向</label><input id="target" value="视觉设计师 / UI 设计师" /></div>
+          <div class="field"><label>手机号</label><input id="phone" value="138 0000 0000" /></div>
+          <div class="field"><label>邮箱</label><input id="email" value="hello@example.com" /></div>
+          <div class="field"><label>城市</label><input id="city" value="上海" /></div>
+          <div class="field"><label>作品集 / 网站</label><input id="website" value="fengnan.vision" /></div>
+        </div>
+
+        <div class="section-title">个人简介</div>
+        <textarea id="summary">3年视觉设计与 UI 设计经验，熟悉品牌视觉、网页界面、AIGC 视觉生成与商业海报设计。具备从创意概念、视觉系统到最终交付的完整执行能力，注重信息层级、审美表达与真实业务落地。</textarea>
+
+        <div class="section-title">自选加分模块</div>
+        <div class="field">
+          <label>模块标题</label>
+          <select id="bonusTitle">
+            <option value="自我评价">自我评价</option>
+            <option value="我的优势">我的优势</option>
+            <option value="加分项">加分项</option>
+            <option value="__custom__">自定义</option>
+          </select>
+        </div>
+        <div id="bonusCustomWrap" class="field" style="display:none;">
+          <label>自定义模块标题</label>
+          <input id="bonusCustomTitle" placeholder="例如：证书资质 / 获奖经历 / 语言能力" />
+        </div>
+        <div class="field">
+          <label>模块内容，留空则不显示</label>
+          <textarea id="bonusContent">审美稳定，执行效率高，能将复杂信息整理成清晰的视觉结构。熟悉 AI 工具与传统设计流程结合，适合需要快速产出、高质量表达和多风格适配的设计工作。</textarea>
+        </div>
+
+        <div class="section-title">教育经历</div>
+        <div id="educationList"></div>
+        <button class="btn-soft" onclick="addEducation()">+ 添加教育经历</button>
+
+        <div class="section-title">工作经历</div>
+        <div id="workList"></div>
+        <button class="btn-soft" onclick="addWork()">+ 添加工作经历</button>
+
+        <div class="section-title">项目经历</div>
+        <div id="projectList"></div>
+        <button class="btn-soft" onclick="addProject()">+ 添加项目经历</button>
+
+        <div class="section-title">技能标签</div>
+        <div class="field">
+          <label>用 / 或逗号分隔</label>
+          <textarea id="skills">Figma / Photoshop / Illustrator / After Effects / HTML / CSS / AIGC / 品牌设计 / UI设计</textarea>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn-primary" onclick="fillExample()">填入示例</button>
+          <button class="btn-danger" onclick="clearAll()">清空</button>
+        </div>
+      </aside>
+
+      <section class="panel preview-panel">
+        <div class="preview-toolbar">
+          <div class="hint">当前风格：<strong id="styleName">极简商务</strong>。正式投递建议导出 PDF。</div>
+          <div class="btn-row" style="margin:0;">
+            <button class="btn-accent" onclick="downloadPNG()">导出 PNG</button>
+            <button class="btn-primary" onclick="downloadPDF()">导出 PDF</button>
+            <button class="btn-soft" onclick="window.print()">浏览器打印</button>
+          </div>
+        </div>
+
+        <div class="paper-wrap">
+          <article id="resumePage" class="resume-page preset-minimal">
+            <div class="resume-inner">
+              <header class="resume-header">
+                <div id="resumeAvatar" class="resume-avatar avatar-crop" title="按住拖拽调整头像位置"><img id="resumeAvatarImg" alt="简历头像" /></div>
+                <div>
+                  <h1 id="rName" class="resume-name"></h1>
+                  <div id="rTarget" class="resume-target"></div>
+                  <div class="resume-contact">
+                    <span id="rPhone"></span>
+                    <span id="rEmail"></span>
+                    <span id="rCity"></span>
+                    <span id="rWebsite"></span>
+                  </div>
+                </div>
+              </header>
+
+              <div class="resume-body">
+                <main>
+                  <section class="resume-section"><h2>Profile</h2><p id="rSummary"></p></section>
+                  <section class="resume-section"><h2>Education</h2><div id="rEducation"></div></section>
+                  <section class="resume-section"><h2>Experience</h2><div id="rWork"></div></section>
+                  <section class="resume-section"><h2>Projects</h2><div id="rProjects"></div></section>
+                  <section class="resume-section"><h2>Skills</h2><div id="rSkills" class="skill-list"></div></section>
+                  <section id="rBonusWrap" class="resume-section"><h2 id="rBonusTitle"></h2><p id="rBonusContent"></p></section>
+                </main>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </section>
+
+  <div id="cropModal" class="crop-modal" aria-hidden="true">
+    <div class="crop-dialog">
+      <div class="crop-head">
+        <div>
+          <strong>头像裁剪预览</strong>
+          <span>先拖拽和缩放头像，满意后再应用到简历。这里不会上传服务器。</span>
+        </div>
+        <button class="btn-soft" onclick="closeCropper()">关闭</button>
+      </div>
+
+      <div class="crop-stage-wrap">
+        <div id="cropStage" class="crop-stage">
+          <img id="cropImage" alt="裁剪头像" />
+        </div>
+      </div>
+
+      <div class="crop-tools">
+        <div class="crop-tool-row">
+          <label for="cropZoom" style="margin:0;">缩放</label>
+          <input id="cropZoom" type="range" min="1" max="3" step="0.01" value="1" />
+        </div>
+        <div class="btn-row">
+          <button class="btn-soft" onclick="setCropMode('contain')">显示完整</button>
+          <button class="btn-soft" onclick="setCropMode('cover')">填满头像框</button>
+          <button class="btn-soft" onclick="resetCropper()">居中</button>
+          <button class="btn-accent" onclick="applyCropper()">应用头像</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="export-loading" aria-live="polite" aria-hidden="true">
+    <div class="export-card">
+      <div class="export-spinner"></div>
+      <strong id="exportTitle">正在生成文件</strong>
+      <span id="exportDesc">请保持页面打开，移动端可能需要几秒。</span>
+    </div>
+  </div>
+
+  <div class="mobile-action-bar" aria-label="移动端快捷操作">
+    <button class="btn-soft" onclick="scrollToTop()">编辑</button>
+    <button class="btn-soft" onclick="scrollToPreview()">预览</button>
+    <button class="btn-accent" onclick="downloadPNG()">PNG</button>
+    <button class="btn-primary" onclick="downloadPDF()">PDF</button>
+  </div>
+
+  </main>
+
+  <script>
+    const defaultAvatar = "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(`
+      <svg xmlns='http://www.w3.org/2000/svg' width='240' height='240' viewBox='0 0 240 240'>
+        <defs><linearGradient id='g' x1='0' x2='1' y1='0' y2='1'><stop stop-color='#dbeafe'/><stop offset='1' stop-color='#f8fafc'/></linearGradient></defs>
+        <rect width='240' height='240' rx='48' fill='url(#g)'/>
+        <circle cx='120' cy='92' r='42' fill='#94a3b8'/>
+        <path d='M52 202c10-44 42-68 68-68s58 24 68 68' fill='#64748b'/>
+      </svg>`);
+
+    let avatarData = defaultAvatar;
+    let avatarOffsetX = 0;
+    let avatarOffsetY = 0;
+    let avatarScale = 1;
+    let avatarRadius = 28;
+    let avatarCircle = false;
+    let currentPreset = "minimal";
+    let pendingAvatarData = "";
+    let cropImageObj = null;
+    let cropMode = "cover";
+    let cropZoom = 1;
+    let cropOffsetX = 0;
+    let cropOffsetY = 0;
+    let cropDragging = false;
+    let cropStartX = 0;
+    let cropStartY = 0;
+    let cropBaseX = 0;
+    let cropBaseY = 0;
+    const presetNames = { minimal: "极简商务", fluent: "Fluent 蓝", mono: "黑白高级", creative: "设计师卡片", warm: "银白高级", aurora: "极光科技" };
+    const $ = (id) => document.getElementById(id);
+    const APP_VERSION = "production-20260509";
+
+    function safeText(value) { return String(value || "").trim(); }
+    function fileSafeName(value) {
+      return (safeText(value) || "resume").replace(/[\\/:*?"<>|\s]+/g, "_").replace(/^_+|_+$/g, "") || "resume";
+    }
+
+    function setExportBusy(isBusy, title = "正在生成文件", desc = "请保持页面打开，移动端可能需要几秒。") {
+      document.body.classList.toggle("is-exporting", Boolean(isBusy));
+      const loading = $("exportTitle");
+      const sub = $("exportDesc");
+      const overlay = document.querySelector(".export-loading");
+      if (loading) loading.textContent = title;
+      if (sub) sub.textContent = desc;
+      if (overlay) overlay.setAttribute("aria-hidden", isBusy ? "false" : "true");
+    }
+
+    async function runWithExportState(title, desc, task) {
+      try {
+        setExportBusy(true, title, desc);
+        await new Promise(resolve => requestAnimationFrame(resolve));
+        await task();
+      } catch (error) {
+        console.error(error);
+        alert("导出失败：请确认网络可访问 html2canvas / jsPDF，或稍后重试。\n" + (error && error.message ? error.message : ""));
+      } finally {
+        setExportBusy(false);
+      }
+    }
+
+    function ensureExportLibs(type) {
+      if (typeof html2canvas === "undefined") {
+        alert("html2canvas 未加载完成。请检查网络或 CDN 是否被拦截。实际部署时建议把 html2canvas 文件放到本地。 ");
+        return false;
+      }
+      if (type === "pdf" && (!window.jspdf || !window.jspdf.jsPDF)) {
+        alert("jsPDF 未加载完成。请检查网络或 CDN 是否被拦截。实际部署时建议把 jsPDF 文件放到本地。 ");
+        return false;
+      }
+      return true;
+    }
+    function escapeHTML(str) {
+      return String(str || "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+    function escapeAttr(str) { return escapeHTML(str).replaceAll("`", "&#096;"); }
+
+    function updateAvatarViews() {
+      const previewImg = $("avatarPreviewImg");
+      const resumeImg = $("resumeAvatarImg");
+      if (previewImg) previewImg.src = avatarData;
+      if (resumeImg) resumeImg.src = avatarData;
+      const avatarRadiusCss = avatarCircle ? "50%" : `${avatarRadius}px`;
+      ["avatarPreview", "resumeAvatar"].forEach(id => {
+        const el = $(id);
+        if (!el) return;
+        el.style.setProperty("--avatar-x", `${avatarOffsetX}%`);
+        el.style.setProperty("--avatar-y", `${avatarOffsetY}%`);
+        el.style.setProperty("--avatar-scale", avatarScale);
+        el.style.borderRadius = avatarRadiusCss;
+      });
+      const cropStage = $("cropStage");
+      if (cropStage) cropStage.style.setProperty("--crop-avatar-radius", avatarRadiusCss);
+      const slider = $("avatarScale");
+      if (slider) slider.value = avatarScale;
+      const radiusSlider = $("avatarRadius");
+      if (radiusSlider) radiusSlider.value = avatarCircle ? 52 : avatarRadius;
+      const radiusValue = $("avatarRadiusValue");
+      if (radiusValue) radiusValue.textContent = avatarCircle ? "圆形" : `${avatarRadius}px`;
+    }
+
+    function resetAvatarCrop() {
+      avatarOffsetX = 0;
+      avatarOffsetY = 0;
+      avatarScale = 1;
+      updateAvatarViews();
+      saveDraft();
+    }
+
+    function setAvatarRadius(value) {
+      avatarCircle = false;
+      avatarRadius = Math.max(0, Math.min(52, Number(value) || 0));
+      updateAvatarViews();
+      saveDraft();
+    }
+
+    function setAvatarCircle() {
+      avatarCircle = true;
+      avatarRadius = 52;
+      updateAvatarViews();
+      saveDraft();
+    }
+
+    function bindAvatarDrag(id) {
+      const el = $(id);
+      if (!el) return;
+      let active = false;
+      let startX = 0;
+      let startY = 0;
+      let baseX = 0;
+      let baseY = 0;
+      el.addEventListener("pointerdown", (e) => {
+        active = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        baseX = avatarOffsetX;
+        baseY = avatarOffsetY;
+        el.classList.add("dragging");
+        el.setPointerCapture(e.pointerId);
+      });
+      el.addEventListener("pointermove", (e) => {
+        if (!active) return;
+        const box = el.getBoundingClientRect();
+        avatarOffsetX = baseX + ((e.clientX - startX) / box.width) * 100;
+        avatarOffsetY = baseY + ((e.clientY - startY) / box.height) * 100;
+        avatarOffsetX = Math.max(-60, Math.min(60, avatarOffsetX));
+        avatarOffsetY = Math.max(-60, Math.min(60, avatarOffsetY));
+        updateAvatarViews();
+      });
+      const end = (e) => {
+        if (!active) return;
+        active = false;
+        el.classList.remove("dragging");
+        saveDraft();
+      };
+      el.addEventListener("pointerup", end);
+      el.addEventListener("pointercancel", end);
+      el.addEventListener("lostpointercapture", end);
+    }
+
+
+    function getCropBaseScale() {
+      if (!cropImageObj) return 1;
+      const stage = $("cropStage");
+      const box = stage.getBoundingClientRect();
+      const sx = box.width / cropImageObj.naturalWidth;
+      const sy = box.height / cropImageObj.naturalHeight;
+      return cropMode === "contain" ? Math.min(sx, sy) : Math.max(sx, sy);
+    }
+
+    function updateCropperView() {
+      updateAvatarViews();
+      const img = $("cropImage");
+      if (!img || !cropImageObj) return;
+      const stage = $("cropStage");
+      const box = stage.getBoundingClientRect();
+      const baseScale = getCropBaseScale();
+      const displayW = cropImageObj.naturalWidth * baseScale * cropZoom;
+      const displayH = cropImageObj.naturalHeight * baseScale * cropZoom;
+      img.style.width = `${displayW}px`;
+      img.style.height = `${displayH}px`;
+      img.style.transform = `translate(-50%, -50%) translate(${cropOffsetX}px, ${cropOffsetY}px)`;
+      $("cropZoom").value = cropZoom;
+    }
+
+    function openCropper(dataUrl) {
+      pendingAvatarData = dataUrl;
+      cropImageObj = new Image();
+      cropImageObj.onload = () => {
+        $("cropImage").src = pendingAvatarData;
+        cropMode = "cover";
+        cropZoom = 1;
+        cropOffsetX = 0;
+        cropOffsetY = 0;
+        $("cropModal").classList.add("open");
+        $("cropModal").setAttribute("aria-hidden", "false");
+        requestAnimationFrame(updateCropperView);
+      };
+      cropImageObj.src = dataUrl;
+    }
+
+    function closeCropper() {
+      $("cropModal").classList.remove("open");
+      $("cropModal").setAttribute("aria-hidden", "true");
+    }
+
+    function setCropMode(mode) {
+      cropMode = mode === "contain" ? "contain" : "cover";
+      cropZoom = 1;
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      updateCropperView();
+    }
+
+    function resetCropper() {
+      cropZoom = 1;
+      cropOffsetX = 0;
+      cropOffsetY = 0;
+      updateCropperView();
+    }
+
+    function applyCropper() {
+      if (!cropImageObj) return;
+      const stage = $("cropStage");
+      const box = stage.getBoundingClientRect();
+      const stageSize = Math.round(Math.min(box.width, box.height));
+      const outputSize = 900;
+      const factor = outputSize / stageSize;
+      const baseScale = getCropBaseScale();
+      const drawW = cropImageObj.naturalWidth * baseScale * cropZoom * factor;
+      const drawH = cropImageObj.naturalHeight * baseScale * cropZoom * factor;
+      const drawX = outputSize / 2 - drawW / 2 + cropOffsetX * factor;
+      const drawY = outputSize / 2 - drawH / 2 + cropOffsetY * factor;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = outputSize;
+      canvas.height = outputSize;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#f8fafc";
+      ctx.fillRect(0, 0, outputSize, outputSize);
+      ctx.drawImage(cropImageObj, drawX, drawY, drawW, drawH);
+
+      avatarData = canvas.toDataURL("image/png");
+      avatarOffsetX = 0;
+      avatarOffsetY = 0;
+      avatarScale = 1;
+      closeCropper();
+      renderResume();
+      saveDraft();
+    }
+
+    function bindCropperDrag() {
+      const stage = $("cropStage");
+      if (!stage) return;
+      stage.addEventListener("pointerdown", (e) => {
+        if (!cropImageObj) return;
+        cropDragging = true;
+        cropStartX = e.clientX;
+        cropStartY = e.clientY;
+        cropBaseX = cropOffsetX;
+        cropBaseY = cropOffsetY;
+        stage.classList.add("dragging");
+        stage.setPointerCapture(e.pointerId);
+      });
+      stage.addEventListener("pointermove", (e) => {
+        if (!cropDragging) return;
+        cropOffsetX = cropBaseX + e.clientX - cropStartX;
+        cropOffsetY = cropBaseY + e.clientY - cropStartY;
+        updateCropperView();
+      });
+      const end = () => {
+        cropDragging = false;
+        stage.classList.remove("dragging");
+      };
+      stage.addEventListener("pointerup", end);
+      stage.addEventListener("pointercancel", end);
+      stage.addEventListener("lostpointercapture", end);
+    }
+
+    function scrollToPreview() {
+      $("resumePage").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function scrollToTop() {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function updateMobileResumeScale() {
+      const page = $("resumePage");
+      const wrap = page && page.parentElement;
+      if (!page || !wrap) return;
+      if (window.innerWidth > 860) {
+        page.style.removeProperty("--mobile-resume-scale");
+        return;
+      }
+      const available = Math.max(300, wrap.clientWidth - 4);
+      const scale = Math.min(1, available / 794);
+      page.style.setProperty("--mobile-resume-scale", scale.toFixed(3));
+      wrap.style.height = `${Math.ceil(1123 * scale) + 24}px`;
+    }
+
+    async function captureResumeCanvas(options = {}) {
+      const page = $("resumePage");
+      const wrap = page.parentElement;
+      const oldTransform = page.style.transform;
+      const oldWrapHeight = wrap.style.height;
+      const oldScrollX = window.scrollX;
+      const oldScrollY = window.scrollY;
+      const oldBackgroundColor = page.style.backgroundColor;
+      const oldIsolation = page.style.isolation;
+
+      page.classList.add("exporting");
+      page.style.transform = "none";
+      page.style.backgroundColor = "#ffffff";
+      page.style.isolation = "isolate";
+      wrap.style.height = "auto";
+
+      try {
+        if (document.fonts && document.fonts.ready) {
+          try { await document.fonts.ready; } catch (_) {}
+        }
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        const canvas = await html2canvas(page, {
+          scale: options.scale || 3,
+          useCORS: true,
+          allowTaint: false,
+          logging: false,
+          backgroundColor: "#ffffff",
+          windowWidth: document.documentElement.scrollWidth,
+          windowHeight: document.documentElement.scrollHeight
+        });
+
+        return canvas;
+      } finally {
+        page.classList.remove("exporting");
+        page.style.transform = oldTransform;
+        page.style.backgroundColor = oldBackgroundColor;
+        page.style.isolation = oldIsolation;
+        wrap.style.height = oldWrapHeight;
+        window.scrollTo(oldScrollX, oldScrollY);
+        updateMobileResumeScale();
+      }
+    }
+
+
+    function applyPreset(preset) {
+      currentPreset = preset || "minimal";
+      const page = $("resumePage");
+      page.classList.remove("preset-minimal", "preset-fluent", "preset-mono", "preset-creative", "preset-warm", "preset-aurora");
+      page.classList.add(`preset-${currentPreset}`);
+      $("stylePreset").value = currentPreset;
+      $("styleName").textContent = presetNames[currentPreset] || "极简商务";
+      document.querySelectorAll(".style-card").forEach(card => card.classList.toggle("active", card.dataset.preset === currentPreset));
+    }
+
+    function selectPreset(preset) {
+      applyPreset(preset);
+      saveDraft();
+    }
+
+    function makeInput(label, value = "") {
+      return `<div class="field"><label>${label}</label><input value="${escapeAttr(value)}" oninput="renderResume(); saveDraft();" /></div>`;
+    }
+    function makeTextarea(label, value = "") {
+      return `<div class="field"><label>${label}</label><textarea oninput="renderResume(); saveDraft();">${escapeHTML(value)}</textarea></div>`;
+    }
+
+    function createEntryHtml(type, data = {}) {
+      const titleMap = { edu: "教育经历", work: "工作经历", project: "项目经历" };
+      let fields = "";
+      if (type === "edu") {
+        fields = `<div class="grid-2">${makeInput("学校", data.school || "")}${makeInput("专业 / 学历", data.major || "")}</div>${makeInput("时间", data.time || "")}${makeTextarea("描述", data.desc || "")}`;
+      }
+      if (type === "work") {
+        fields = `<div class="grid-2">${makeInput("公司", data.company || "")}${makeInput("职位", data.role || "")}</div>${makeInput("时间", data.time || "")}${makeTextarea("工作内容", data.desc || "")}`;
+      }
+      if (type === "project") {
+        fields = `<div class="grid-2">${makeInput("项目名称", data.name || "")}${makeInput("项目角色", data.role || "")}</div>${makeInput("时间", data.time || "")}${makeTextarea("项目描述 / 成果", data.desc || "")}`;
+      }
+      const card = document.createElement("div");
+      card.className = "item-card";
+      card.dataset.type = type;
+      card.innerHTML = `<div class="item-head"><strong>${titleMap[type]}</strong><button class="remove-btn" onclick="this.closest('.item-card').remove(); renderResume(); saveDraft();">删除</button></div>${fields}`;
+      return card;
+    }
+
+    function addEducation(data = {}) { $("educationList").appendChild(createEntryHtml("edu", data)); renderResume(); saveDraft(); }
+    function addWork(data = {}) { $("workList").appendChild(createEntryHtml("work", data)); renderResume(); saveDraft(); }
+    function addProject(data = {}) { $("projectList").appendChild(createEntryHtml("project", data)); renderResume(); saveDraft(); }
+
+    function getCards(containerId) {
+      return Array.from($(containerId).querySelectorAll(".item-card")).map(card => {
+        const inputs = Array.from(card.querySelectorAll("input")).map(i => i.value.trim());
+        const textareas = Array.from(card.querySelectorAll("textarea")).map(t => t.value.trim());
+        if (card.dataset.type === "edu") return { school: inputs[0], major: inputs[1], time: inputs[2], desc: textareas[0] };
+        if (card.dataset.type === "work") return { company: inputs[0], role: inputs[1], time: inputs[2], desc: textareas[0] };
+        return { name: inputs[0], role: inputs[1], time: inputs[2], desc: textareas[0] };
+      });
+    }
+
+    function entryHtml({ title, sub, time, desc }) {
+      if (!title && !sub && !time && !desc) return "";
+      return `<div class="entry"><div class="entry-title"><strong>${escapeHTML(title || "未填写")}</strong><span class="entry-time">${escapeHTML(time || "")}</span></div>${sub ? `<div class="entry-sub">${escapeHTML(sub)}</div>` : ""}${desc ? `<p>${escapeHTML(desc)}</p>` : ""}</div>`;
+    }
+
+    function getBonusTitle() {
+      const mode = safeText($("bonusTitle").value);
+      if (mode === "__custom__") {
+        return safeText($("bonusCustomTitle").value) || "自定义";
+      }
+      return mode || "自我评价";
+    }
+
+    function updateBonusTitleUI() {
+      const isCustom = $("bonusTitle").value === "__custom__";
+      $("bonusCustomWrap").style.display = isCustom ? "block" : "none";
+    }
+
+    function renderResume() {
+      updateAvatarViews();
+      $("rName").textContent = safeText($("name").value) || "姓名";
+      $("rTarget").textContent = safeText($("target").value) || "求职意向";
+      $("rPhone").textContent = safeText($("phone").value) ? `电话：${safeText($("phone").value)}` : "";
+      $("rEmail").textContent = safeText($("email").value) ? `邮箱：${safeText($("email").value)}` : "";
+      $("rCity").textContent = safeText($("city").value) ? `城市：${safeText($("city").value)}` : "";
+      $("rWebsite").textContent = safeText($("website").value) ? `作品集：${safeText($("website").value)}` : "";
+      $("rSummary").textContent = safeText($("summary").value) || "填写你的个人简介。";
+      const bonusContent = safeText($("bonusContent").value);
+      updateBonusTitleUI();
+      $("rBonusTitle").textContent = getBonusTitle();
+      $("rBonusContent").textContent = bonusContent;
+      $("rBonusWrap").style.display = bonusContent ? "block" : "none";
+
+      $("rEducation").innerHTML = getCards("educationList").map(item => entryHtml({ title: item.school, sub: item.major, time: item.time, desc: item.desc })).join("") || `<p>暂无教育经历</p>`;
+      $("rWork").innerHTML = getCards("workList").map(item => entryHtml({ title: item.company, sub: item.role, time: item.time, desc: item.desc })).join("") || `<p>暂无工作经历</p>`;
+      $("rProjects").innerHTML = getCards("projectList").map(item => entryHtml({ title: item.name, sub: item.role, time: item.time, desc: item.desc })).join("") || `<p>暂无项目经历</p>`;
+
+      const skills = safeText($("skills").value).split(/[\/，,、\n]/).map(s => s.trim()).filter(Boolean);
+      $("rSkills").innerHTML = skills.map(s => `<span class="skill-tag">${escapeHTML(s)}</span>`).join("") || `<p>暂无技能</p>`;
+      updateMobileResumeScale();
+    }
+
+    function fillExample() {
+      $("name").value = "张三";
+      $("target").value = "视觉设计师 / UI 设计师";
+      $("phone").value = "138 0000 0000";
+      $("email").value = "hello@example.com";
+      $("city").value = "上海";
+      $("website").value = "fengnan.vision";
+      $("summary").value = "3年视觉设计与 UI 设计经验，熟悉品牌视觉、网页界面、AIGC 视觉生成与商业海报设计。具备从创意概念、视觉系统到最终交付的完整执行能力，注重信息层级、审美表达与真实业务落地。";
+      $("bonusTitle").value = "我的优势";
+      $("bonusCustomTitle").value = "";
+      $("bonusContent").value = "审美稳定，执行效率高，能将复杂信息整理成清晰的视觉结构。熟悉 AI 工具与传统设计流程结合，适合需要快速产出、高质量表达和多风格适配的设计工作。";
+      $("skills").value = "Figma / Photoshop / Illustrator / After Effects / HTML / CSS / AIGC / 品牌设计 / UI设计";
+      $("educationList").innerHTML = "";
+      $("workList").innerHTML = "";
+      $("projectList").innerHTML = "";
+      addEducation({ school: "某某大学", major: "视觉传达设计 / 本科", time: "2020 - 2024", desc: "系统学习品牌设计、版式设计、用户界面设计与视觉传播方法。" });
+      addWork({ company: "某科技公司", role: "UI / 视觉设计师", time: "2024.07 - 至今", desc: "负责产品界面设计、活动视觉、品牌物料与设计规范建设。参与多个 B 端和 C 端项目，从需求理解到高保真交付全流程推进。" });
+      addProject({ name: "企业后台系统改版", role: "主设计师", time: "2025", desc: "重构信息架构与核心页面视觉层级，统一组件规范，提升界面一致性与操作效率。" });
+      renderResume(); saveDraft();
+    }
+
+    function clearAll() {
+      ["name", "target", "phone", "email", "city", "website", "summary", "bonusCustomTitle", "bonusContent", "skills"].forEach(id => $(id).value = "");
+      $("bonusTitle").value = "自我评价";
+      updateBonusTitleUI();
+      $("educationList").innerHTML = "";
+      $("workList").innerHTML = "";
+      $("projectList").innerHTML = "";
+      avatarData = defaultAvatar;
+      avatarOffsetX = 0;
+      avatarOffsetY = 0;
+      avatarScale = 1;
+      avatarRadius = 28;
+      avatarCircle = false;
+      renderResume(); saveDraft();
+    }
+
+    async function downloadPNG() {
+      await runWithExportState("正在导出 PNG", "正在生成高清 A4 图片，请保持页面打开。", async () => {
+        if (!ensureExportLibs("png")) return;
+        const canvas = await captureResumeCanvas({ backgroundColor: "#ffffff", scale: 3 });
+        const link = document.createElement("a");
+        link.download = `${fileSafeName($("name").value)}_${presetNames[currentPreset]}_简历.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+
+    async function downloadPDF() {
+      await runWithExportState("正在导出 PDF", "正在生成 A4 PDF，移动端可能需要几秒。", async () => {
+        if (!ensureExportLibs("pdf")) return;
+        const canvas = await captureResumeCanvas({ backgroundColor: "#ffffff", scale: 3 });
+        const imgData = canvas.toDataURL("image/jpeg", 0.96);
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("p", "mm", "a4");
+        pdf.addImage(imgData, "JPEG", 0, 0, 210, 297);
+        pdf.save(`${fileSafeName($("name").value)}_${presetNames[currentPreset]}_简历.pdf`);
+      });
+    }
+
+    function saveDraft() {
+      const draft = {
+        appVersion: APP_VERSION,
+        avatarData,
+        avatarOffsetX,
+        avatarOffsetY,
+        avatarScale,
+        avatarRadius,
+        avatarCircle,
+        currentPreset,
+        basics: ["name", "target", "phone", "email", "city", "website", "summary", "bonusTitle", "bonusCustomTitle", "bonusContent", "skills"].reduce((obj, id) => { obj[id] = $(id).value; return obj; }, {}),
+        education: getCards("educationList"),
+        work: getCards("workList"),
+        projects: getCards("projectList")
+      };
+      localStorage.setItem("fengnan_resume_builder_website_draft", JSON.stringify(draft));
+    }
+
+    function loadDraft() {
+      const raw = localStorage.getItem("fengnan_resume_builder_website_draft");
+      if (!raw) return false;
+      try {
+        const draft = JSON.parse(raw);
+        avatarData = draft.avatarData || defaultAvatar;
+        avatarOffsetX = Number.isFinite(draft.avatarOffsetX) ? draft.avatarOffsetX : 0;
+        avatarOffsetY = Number.isFinite(draft.avatarOffsetY) ? draft.avatarOffsetY : 0;
+        avatarScale = Number.isFinite(draft.avatarScale) ? draft.avatarScale : 1;
+        avatarRadius = Number.isFinite(draft.avatarRadius) ? draft.avatarRadius : 28;
+        avatarCircle = Boolean(draft.avatarCircle);
+        currentPreset = draft.currentPreset || "minimal";
+        Object.entries(draft.basics || {}).forEach(([id, value]) => { if ($(id)) $(id).value = value; });
+        $("educationList").innerHTML = "";
+        $("workList").innerHTML = "";
+        $("projectList").innerHTML = "";
+        (draft.education || []).forEach(data => $("educationList").appendChild(createEntryHtml("edu", data)));
+        (draft.work || []).forEach(data => $("workList").appendChild(createEntryHtml("work", data)));
+        (draft.projects || []).forEach(data => $("projectList").appendChild(createEntryHtml("project", data)));
+        updateBonusTitleUI();
+        applyPreset(currentPreset);
+        renderResume();
+        return true;
+      } catch (e) {
+        console.warn("Draft load failed", e);
+        return false;
+      }
+    }
+
+    $("avatarInput").addEventListener("change", (event) => {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (e) => openCropper(e.target.result);
+      reader.readAsDataURL(file);
+      event.target.value = "";
+    });
+
+    $("avatarScale").addEventListener("input", (event) => {
+      avatarScale = Number(event.target.value) || 1;
+      updateAvatarViews();
+      saveDraft();
+    });
+    $("avatarRadius").addEventListener("input", (event) => {
+      setAvatarRadius(event.target.value);
+    });
+    $("cropZoom").addEventListener("input", (event) => {
+      cropZoom = Number(event.target.value) || 1;
+      updateCropperView();
+    });
+    bindCropperDrag();
+    window.addEventListener("resize", () => {
+      updateMobileResumeScale();
+      updateCropperView();
+    });
+    bindAvatarDrag("avatarPreview");
+    bindAvatarDrag("resumeAvatar");
+
+    $("bonusTitle").addEventListener("change", () => { updateBonusTitleUI(); renderResume(); saveDraft(); });
+
+    ["name", "target", "phone", "email", "city", "website", "summary", "bonusCustomTitle", "bonusContent", "skills"].forEach(id => {
+      $(id).addEventListener("input", () => { renderResume(); saveDraft(); });
+    });
+
+    if (!loadDraft()) {
+      fillExample();
+      applyPreset("minimal");
+    }
+    renderResume();
+    updateMobileResumeScale();
+  </script>
+</body>
+</html>
