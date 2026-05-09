@@ -39,7 +39,11 @@
       min-height: 100vh;
       font-family: var(--font-body);
       color: var(--text);
-      background: var(--page);
+      background:
+        radial-gradient(circle at 18% 10%, rgba(37, 99, 235, .055), transparent 28%),
+        radial-gradient(circle at 82% 8%, rgba(124, 58, 237, .05), transparent 26%),
+        radial-gradient(circle at 54% 44%, rgba(14, 165, 168, .035), transparent 32%),
+        var(--page);
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
       font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
@@ -158,6 +162,24 @@
       overflow: hidden;
     }
 
+    .hero::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: min(760px, 78vw);
+      height: min(760px, 78vw);
+      transform: translate(-50%, -54%);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 32% 28%, rgba(37, 99, 235, .13), transparent 30%),
+        radial-gradient(circle at 68% 34%, rgba(124, 58, 237, .10), transparent 32%),
+        radial-gradient(circle at 52% 72%, rgba(14, 165, 168, .08), transparent 34%);
+      filter: blur(18px);
+      opacity: .72;
+      pointer-events: none;
+      z-index: -1;
+    }
 
     .eyebrow {
       margin-bottom: 26px;
@@ -239,7 +261,7 @@
       border: 1px solid rgba(15, 23, 42, .065);
       border-left: none;
       border-right: none;
-      background: rgba(255, 255, 255, .72);
+      background: linear-gradient(180deg, rgba(255, 255, 255, .58), rgba(255, 255, 255, .38));
       backdrop-filter: blur(18px) saturate(160%);
       -webkit-backdrop-filter: blur(18px) saturate(160%);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, .78);
@@ -470,6 +492,26 @@
       letter-spacing: -.016em;
     }
 
+    .more-title {
+      margin: 0 0 14px;
+      font-family: var(--font-display);
+      color: #1d1d1f;
+      font-size: clamp(30px, 3.1vw, 42px);
+      line-height: 1.08;
+      font-weight: 650;
+      letter-spacing: -.046em;
+      text-wrap: balance;
+    }
+
+    .more-desc {
+      margin: 0;
+      color: var(--sub);
+      font-size: 15px;
+      line-height: 1.62;
+      font-weight: 400;
+      letter-spacing: -.016em;
+    }
+
     .work-card:hover {
       transform: translateY(-4px);
       border-color: rgba(37, 99, 235, .18);
@@ -497,20 +539,11 @@
       position: absolute;
       inset: 0;
       z-index: -1;
-      background: none;
+      background: linear-gradient(180deg, rgba(245,245,247,.10) 0%, rgba(245,245,247,.24) 42%, rgba(245,245,247,.96) 100%);
     }
 
     .work-content {
-      position: relative;
-      z-index: 1;
-      margin: 0 16px 16px;
-      padding: 20px 22px 21px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, .84);
-      border: 1px solid rgba(255, 255, 255, .78);
-      box-shadow: 0 14px 34px rgba(15, 23, 42, .09), inset 0 1px 0 rgba(255, 255, 255, .82);
-      backdrop-filter: blur(16px) saturate(155%);
-      -webkit-backdrop-filter: blur(16px) saturate(155%);
+      padding: 30px;
     }
 
     .work-meta {
@@ -518,8 +551,8 @@
       align-items: center;
       justify-content: space-between;
       gap: 16px;
-      margin-bottom: 13px;
-      color: #7b7f87;
+      margin-bottom: 14px;
+      color: var(--sub-2);
       font-size: 12px;
       line-height: 1.4;
       font-weight: 500;
@@ -528,7 +561,7 @@
 
     .work-title {
       max-width: 520px;
-      margin-bottom: 9px;
+      margin-bottom: 10px;
       font-family: var(--font-display);
       color: #1d1d1f;
       font-size: 28px;
@@ -564,6 +597,17 @@
       position: relative;
     }
 
+    .about-services::before {
+      content: "";
+      position: absolute;
+      right: -160px;
+      top: 110px;
+      width: 420px;
+      height: 420px;
+      border-radius: 999px;
+      background: radial-gradient(circle, rgba(14, 165, 168, .07), transparent 66%);
+      pointer-events: none;
+    }
 
     .profile-block {
       display: grid;
@@ -728,12 +772,69 @@
       flex-wrap: wrap;
     }
 
+    .tool-embed {
+      width: min(var(--container), calc(100vw - 48px));
+      margin: 0 auto;
+      padding: 104px 0;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .tool-embed-head {
+      display: grid;
+      grid-template-columns: .92fr 1.08fr;
+      gap: 96px;
+      align-items: end;
+      margin-bottom: 34px;
+    }
+
+    .tool-embed-title {
+      max-width: 560px;
+      font-family: var(--font-display);
+      color: #000;
+      font-size: clamp(36px, 4.6vw, 64px);
+      line-height: .98;
+      font-weight: 700;
+      letter-spacing: -.058em;
+      text-wrap: balance;
+    }
+
+    .tool-embed-copy {
+      max-width: 560px;
+      color: var(--sub);
+      font-size: 17px;
+      line-height: 1.64;
+      font-weight: 400;
+      letter-spacing: -.022em;
+    }
+
+    .tool-frame-wrap {
+      overflow: hidden;
+      border-radius: 28px;
+      border: 1px solid rgba(15, 23, 42, .075);
+      background: rgba(245, 245, 247, .82);
+      box-shadow: 0 18px 50px rgba(15, 23, 42, .055), inset 0 1px 0 rgba(255,255,255,.76);
+      backdrop-filter: blur(18px) saturate(145%);
+      -webkit-backdrop-filter: blur(18px) saturate(145%);
+    }
+
+    .tool-frame {
+      display: block;
+      width: 100%;
+      height: min(820px, 80vh);
+      border: 0;
+      background: #fff;
+    }
 
     .resource-directory {
       width: min(var(--container), calc(100vw - 48px));
       margin: 0 auto;
-      padding: 34px 0 30px;
-      border-bottom: 1px solid var(--line);
+      padding: 32px 34px 28px;
+      border: 1px solid rgba(255,255,255,.72);
+      border-radius: 28px;
+      background: rgba(255,255,255,.66);
+      backdrop-filter: blur(22px) saturate(150%);
+      -webkit-backdrop-filter: blur(22px) saturate(150%);
+      box-shadow: 0 18px 48px rgba(15, 23, 42, .055), inset 0 1px 0 rgba(255,255,255,.76);
     }
 
     .resource-grid {
@@ -860,6 +961,7 @@
     @media (max-width: 720px) {
       .nav,
       main,
+      .tool-embed,
       .resource-directory,
       .site-footer {
         width: min(100vw - 32px, var(--container));
@@ -1148,7 +1250,7 @@
     </section>
   </main>
 
-  <section class="resource-directory" aria-label="资源索引">
+  $1 aria-label="资源索引">
     <div class="resource-grid">
       <div class="resource-group">
         <h3>视觉工作流</h3>
@@ -1158,7 +1260,7 @@
       </div>
       <div class="resource-group">
         <h3>AIGC 创作</h3>
-        <a href="#">GPT 批量出图</a>
+        <a href="https://mp.weixin.qq.com/s/Va2Np5a_8Jod0n36Si9M1A" target="_blank" rel="noopener noreferrer">镜头语言分享</a>
         <a href="https://mp.weixin.qq.com/s/NuaR0pD2kojALPw11VsyKw" target="_blank" rel="noopener noreferrer">AI 生成歌曲推荐</a>
         <a href="https://mp.weixin.qq.com/s/eeD4Q7vudIXf82wN_h4anw" target="_blank" rel="noopener noreferrer">AI 音乐与音效</a>
       </div>
