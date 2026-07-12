@@ -159,7 +159,7 @@
       justify-content: flex-start;
       align-items: stretch;
       text-align: left;
-      padding: 84px max(24px, calc((100vw - var(--container)) / 2)) 34px;
+      padding: 84px clamp(48px, 7.5vw, 128px) 34px;
       border-bottom: 1px solid var(--line);
       position: relative;
       overflow: hidden;
@@ -171,7 +171,8 @@
       position: absolute;
       inset: 0 0 0 auto;
       z-index: -2;
-      width: min(980px, 64vw);
+      right: -2vw;
+      width: min(1120px, 72vw);
       height: 100%;
       pointer-events: none;
     }
@@ -189,14 +190,14 @@
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, #fbfcff 0%, rgba(251, 252, 255, .96) 20%, rgba(251, 252, 255, .62) 42%, rgba(251, 252, 255, .08) 68%, transparent 100%),
+        linear-gradient(90deg, #fbfcff 0%, rgba(251, 252, 255, .92) 14%, rgba(251, 252, 255, .48) 34%, rgba(251, 252, 255, .08) 58%, transparent 76%),
         linear-gradient(180deg, rgba(251, 252, 255, .08) 0%, rgba(251, 252, 255, 0) 58%, #fbfcff 100%);
     }
 
     .hero-content {
       position: relative;
       z-index: 1;
-      width: min(620px, 52vw);
+      width: min(680px, 52vw);
       padding-top: 34px;
     }
 
@@ -901,7 +902,9 @@
     }
 
     .final-note {
-      padding: 104px 0 112px;
+      width: 100vw;
+      margin-left: calc(50% - 50vw);
+      padding: 104px max(24px, calc((100vw - var(--container)) / 2)) 112px;
       border-bottom: 1px solid var(--line);
       text-align: center;
       position: relative;
@@ -1184,9 +1187,12 @@
       }
 
       .section,
-      .about-services,
-      .final-note {
+      .about-services {
         padding: 88px 0;
+      }
+
+      .final-note {
+        padding: 88px 16px;
       }
 
       .filter-pills {
